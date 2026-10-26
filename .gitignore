@@ -1,0 +1,26 @@
+﻿# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
+
+# vs code
+.vscode/
+
+# ambiente
+.env
+.env.*
+
+# windows
+Thumbs.db
+Desktop.ini
+
+# dati
+dati/
