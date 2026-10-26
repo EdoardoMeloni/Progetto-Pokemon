@@ -1,4 +1,4 @@
-﻿# Python
+﻿# python
 __pycache__/
 *.py[cod]
 .venv/
@@ -11,13 +11,16 @@ build/
 dist/
 *.egg-info/
 
-# VS Code
+# vs code
 .vscode/
 
-# Environment
+# ambiente
 .env
 .env.*
 
-# Windows
+# windows
 Thumbs.db
 Desktop.ini
+
+# dati
+dati/
