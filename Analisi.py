@@ -1,12 +1,9 @@
-
 import csv
 
 FILE = "dati/pokemon.csv"
 
 
 def carica(nomefile):
-    """Legge il CSV, converte i numeri e scarta le righe sporche."""
-
     dati = []
     scartate = 0
 
@@ -23,11 +20,14 @@ def carica(nomefile):
                 riga["height"] = float(riga["height"])
                 riga["weight"] = float(riga["weight"])
 
-                for colonna in statistiche:
-                    riga[colonna] = int(riga[colonna])
+                for stat in statistiche:
+                    riga[stat] = int(riga[stat])
 
-                if not riga["pokemon"] or not riga["type_1"]:
-                    raise ValueError
+                if riga["pokemon"].strip() == "":
+                    continue
+
+                if riga["type_1"].strip() == "":
+                    continue
 
                 dati.append(riga)
 
@@ -38,21 +38,23 @@ def carica(nomefile):
 
 
 def domanda1(dati):
-    """Conta i Pokemon per tipo principale e i secondi tipi."""
-
     conteggio = {}
 
     for p in dati:
         tipo = p["type_1"]
 
-        conteggio[tipo] = conteggio.get(tipo, 0) + 1
+        if tipo not in conteggio:
+            conteggio[tipo] = 0
+
+        conteggio[tipo] += 1
 
     tipo_comune = max(conteggio, key=conteggio.get)
 
-    secondo_tipo = sum(
-        1 for p in dati
-        if p["type_2"].strip() not in ("", "NA")
-    )
+    secondo_tipo = 0
+
+    for p in dati:
+        if p["type_2"].strip() != "" and p["type_2"].strip() != "NA":
+            secondo_tipo += 1
 
     print("\n--- DOMANDA 1 ---")
 
@@ -61,32 +63,26 @@ def domanda1(dati):
         key=lambda x: x[1],
         reverse=True
     ):
-        print(tipo, ":", numero)
+        print(tipo, "-", numero)
 
-    print("Tipo più comune:", tipo_comune)
-    print("Pokemon con secondo tipo:", secondo_tipo)
+    print("Tipo più comune", tipo_comune)
+    print("Pokemon con secondo tipo", secondo_tipo)
 
-    return {
-        "conteggi": conteggio,
-        "tipo_piu_comune": tipo_comune,
-        "secondo_tipo": secondo_tipo
-    }
+    return conteggio, tipo_comune, secondo_tipo
 
 
 def domanda2(dati):
-    """Calcola minimo, massimo e media della statistica totale."""
-
     totali = []
 
     for p in dati:
-        totale = (
-            p["hp"] +
-            p["attack"] +
-            p["defense"] +
-            p["special_attack"] +
-            p["special_defense"] +
-            p["speed"]
-        )
+        totale = 0
+
+        totale += p["hp"]
+        totale += p["attack"]
+        totale += p["defense"]
+        totale += p["special_attack"]
+        totale += p["special_defense"]
+        totale += p["speed"]
 
         p["totale"] = totale
         totali.append(totale)
@@ -95,38 +91,30 @@ def domanda2(dati):
     massimo = max(totali)
     media = sum(totali) / len(totali)
 
-    piu_deboli = [
-        p["pokemon"] for p in dati
-        if p["totale"] == minimo
-    ]
+    piu_deboli = []
+    piu_forti = []
 
-    piu_forti = [
-        p["pokemon"] for p in dati
-        if p["totale"] == massimo
-    ]
+    for p in dati:
+        if p["totale"] == minimo:
+            piu_deboli.append(p["pokemon"])
+
+        if p["totale"] == massimo:
+            piu_forti.append(p["pokemon"])
 
     print("\n--- DOMANDA 2 ---")
 
-    print("Statistica minima:", minimo)
-    print("Pokemon più deboli:", ", ".join(piu_deboli))
+    print("Statistica minima", minimo)
+    print("Pokemon più deboli", ", ".join(piu_deboli))
 
-    print("Statistica massima:", massimo)
-    print("Pokemon più forti:", ", ".join(piu_forti))
+    print("Statistica massima", massimo)
+    print("Pokemon più forti", ", ".join(piu_forti))
 
-    print("Statistica media:", round(media, 2))
+    print("Statistica media", round(media, 2))
 
-    return {
-        "minimo": minimo,
-        "pokemon_deboli": piu_deboli,
-        "massimo": massimo,
-        "pokemon_forti": piu_forti,
-        "media": round(media, 2)
-    }
+    return minimo, piu_deboli, massimo, piu_forti, round(media, 2)
 
 
 def domanda3(dati):
-    """Conta i Pokemon per generazione e calcola la media."""
-
     generazioni = {}
 
     for p in dati:
@@ -142,7 +130,9 @@ def domanda3(dati):
 
     tabella = []
 
-    for generazione, valori in generazioni.items():
+    for generazione in generazioni:
+        valori = generazioni[generazione]
+
         numero = len(valori)
         media = sum(valori) / numero
 
@@ -153,9 +143,9 @@ def domanda3(dati):
         ])
 
     tabella.sort(
-        key=lambda r: (
-            r[0] == "sconosciuta",
-            int(r[0]) if r[0] != "sconosciuta" else 99
+        key=lambda x: (
+            x[0] == "sconosciuta",
+            int(x[0]) if x[0] != "sconosciuta" else 99
         )
     )
 
@@ -163,29 +153,27 @@ def domanda3(dati):
 
     for riga in tabella:
         print(
-            "Generazione:", riga[0],
-            "| Pokemon:", riga[1],
-            "| Media:", riga[2]
+            "Generazione", riga[0],
+            "| Pokemon", riga[1],
+            "| Media", riga[2]
         )
 
     return tabella
 
 
 def domanda4(dati):
-    """Trova i Pokemon più pesanti, leggeri e il rapporto più alto."""
-
     peso_massimo = max(p["weight"] for p in dati)
     peso_minimo = min(p["weight"] for p in dati)
 
-    piu_pesanti = [
-        p["pokemon"] for p in dati
-        if p["weight"] == peso_massimo
-    ]
+    piu_pesanti = []
+    piu_leggeri = []
 
-    piu_leggeri = [
-        p["pokemon"] for p in dati
-        if p["weight"] == peso_minimo
-    ]
+    for p in dati:
+        if p["weight"] == peso_massimo:
+            piu_pesanti.append(p["pokemon"])
+
+        if p["weight"] == peso_minimo:
+            piu_leggeri.append(p["pokemon"])
 
     rapporti = []
 
@@ -193,52 +181,39 @@ def domanda4(dati):
         if p["height"] > 0:
             rapporto = p["weight"] / (p["height"] ** 2)
 
-            rapporti.append((
+            rapporti.append([
                 p["pokemon"],
                 p["weight"],
                 p["height"],
                 rapporto
-            ))
+            ])
 
     rapporti.sort(key=lambda x: x[3], reverse=True)
 
-    soglia = rapporti[4][3]
-
-    primi_cinque = [
-        r for r in rapporti
-        if r[3] >= soglia
-    ]
+    primi_cinque = rapporti[:5]
 
     print("\n--- DOMANDA 4 ---")
 
-    print("Peso massimo:", peso_massimo, "kg")
-    print("Pokemon più pesanti:", ", ".join(piu_pesanti))
+    print("Peso massimo", peso_massimo, "kg")
+    print("Pokemon più pesanti", ", ".join(piu_pesanti))
 
-    print("Peso minimo:", peso_minimo, "kg")
-    print("Pokemon più leggeri:", ", ".join(piu_leggeri))
+    print("Peso minimo", peso_minimo, "kg")
+    print("Pokemon più leggeri", ", ".join(piu_leggeri))
 
-    print("\nPrimi 5 per rapporto peso/altezza^2:")
+    print("\nPrimi 5 per rapporto peso/altezza^2")
 
-    for nome, peso, altezza, rapporto in primi_cinque:
+    for p in primi_cinque:
         print(
-            nome,
-            "| Peso:", peso,
-            "| Altezza:", altezza,
-            "| Rapporto:", round(rapporto, 2)
+            p[0],
+            "| Peso", p[1],
+            "| Altezza", p[2],
+            "| Rapporto", round(p[3], 2)
         )
 
-    return {
-        "peso_massimo": peso_massimo,
-        "piu_pesanti": piu_pesanti,
-        "peso_minimo": peso_minimo,
-        "piu_leggeri": piu_leggeri,
-        "primi_cinque": primi_cinque
-    }
+    return peso_massimo, piu_pesanti, peso_minimo, piu_leggeri, primi_cinque
 
 
 def domanda_nostra(dati):
-    """Quale tipo principale di Pokemon è più veloce in media?"""
-
     velocita = {}
 
     for p in dati:
@@ -251,37 +226,42 @@ def domanda_nostra(dati):
 
     medie = []
 
-    for tipo, valori in velocita.items():
+    for tipo in velocita:
+        valori = velocita[tipo]
+
         media = sum(valori) / len(valori)
-        medie.append((tipo, len(valori), round(media, 2)))
+
+        medie.append([
+            tipo,
+            len(valori),
+            round(media, 2)
+        ])
 
     medie.sort(key=lambda x: x[2], reverse=True)
 
     print("\n--- DOMANDA 5 ---")
 
-    for tipo, numero, media in medie:
+    for riga in medie:
         print(
-            tipo,
-            "| Pokemon:", numero,
-            "| Velocità media:", media
+            riga[0],
+            "| Pokemon", riga[1],
+            "| Velocità media", riga[2]
         )
 
-    print("\nTipo più veloce:", medie[0][0])
-    print("Velocità media:", medie[0][2])
+    print("\nTipo più veloce", medie[0][0])
+    print("Velocità media", medie[0][2])
 
     return medie
 
 
 def scrivi_risultati(nomefile, intestazione, tabella):
-    """Scrive la tabella in un CSV con csv.writer."""
-
-    with open(nomefile, "w", encoding="utf-8",
-              newline="") as file:
-
+    with open(nomefile, "w", encoding="utf-8", newline="") as file:
         scrittore = csv.writer(file)
 
         scrittore.writerow(intestazione)
-        scrittore.writerows(tabella)
+
+        for riga in tabella:
+            scrittore.writerow(riga)
 
     print("\nFile", nomefile, "creato correttamente!")
 
@@ -289,10 +269,10 @@ def scrivi_risultati(nomefile, intestazione, tabella):
 def main():
     dati, scartate = carica(FILE)
 
-    print("Righe buone:", len(dati))
-    print("Righe scartate:", scartate)
+    print("Righe buone", len(dati))
+    print("Righe scartate", scartate)
 
-    if not dati:
+    if len(dati) == 0:
         print("Nessun dato valido da analizzare.")
         return
 
@@ -316,4 +296,6 @@ def main():
 
     domanda_nostra(dati)
 
+
+if __name__ == "__main__":
     main()
