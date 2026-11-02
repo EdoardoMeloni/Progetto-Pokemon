@@ -16,13 +16,67 @@ def domanda1(dati):
 
 def domanda2(dati):
     """Risponde alla domanda 2."""
-    return None
+    totale = []
+    for p in dati():
+        totale = (
+                p["hp"] +
+                p["attack"] +   
+                p["defense"] +
+                p["special_attack"] +
+                p["special_defense"] +
+                p["speed"] 
+        )
+        p["totale"] = totale
+        totale.append(totale)
+
+        minimo = min(totale)
+        massimo = max(totale)
+        media = sum(totale) / len(totale)
+
+        deboli = [p["pokemon"] for p in dati if p ["totale"] == minimo]
+        forti = [p["pokemon"] for p in dati if p ["totale"] == massimo]
+
+    return {
+        "minimo": minimo,
+        "pokemon_deboli": deboli,
+        "massimo": massimo,
+        "pokemon_forti": forti,
+        "media": round(media, 2)
+    }
 
 
 def domanda3(dati):
     """Risponde alla domanda 3. Restituisce la tabella
     che finirà in risultati.csv: una lista di righe."""
-    return []
+    generazioni = {}
+    for p in dati:
+        generazione = p["generazioni_id"].strip()
+        if generazione == "" or generazione == "NA":
+            generazione = "sconosciuta"
+
+            if generazione not in generazioni:
+                generazioni[generazione] = []
+                generazioni[generazione].append(p["totale"])
+
+                tabella = []
+
+                for generazione, valori in generazioni.items():
+                    numero = len (valori)
+                    media = sum(valori) / numero
+
+                    tabella.append([
+                        generazione,
+                        numero,
+                        round(media, 2)
+                    ]) 
+
+                    tabella.sort(
+                        key=lambda r: (
+                            r[0] == "sconosciuta",
+                            int(r[0]) if r[0] != "sconosciuta" else 99
+                        )
+                    )
+    return tabella
 
 
 def domanda_nostra(dati):
